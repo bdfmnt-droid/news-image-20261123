@@ -22,6 +22,7 @@ fully deterministic: two runs write identical bytes. It uses only the
 Python standard library, makes no network calls, and needs no input.
 """
 
+import hashlib
 import os
 import shutil
 import stat
@@ -40,7 +41,13 @@ def main() -> int:
     # The grader collects outputs as another user: leave it world-readable.
     os.chmod(dst, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
     size = os.path.getsize(dst)
-    print(f"wrote {dst} ({size} bytes)")
+    if size != os.path.getsize(src):
+        print(f"copy incomplete: {size} of {os.path.getsize(src)} bytes", file=sys.stderr)
+        return 1
+    digest = hashlib.sha256()
+    with open(dst, "rb") as fh:
+        digest.update(fh.read())
+    print(f"wrote {dst} ({size} bytes, sha256 {digest.hexdigest()[:16]})")
     return 0
 
 
